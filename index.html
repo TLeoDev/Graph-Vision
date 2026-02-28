@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualisation d'Arbre AVL</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="header">
+    <input type="number" id="valInput" placeholder="Valeur" />
+    <button id="btnInsert" onclick="uiInsert()">Insérer</button>
+    <button id="btnDelete" class="btn-danger" onclick="uiDelete()">Supprimer</button>
+
+    <div class="separator"></div>
+
+    <input type="text" id="listInput" placeholder="Liste: 5,3,8,1,4,..." />
+    <button id="btnBuild" class="btn-success" onclick="uiBuildFromList()">Construire</button>
+
+    <div class="separator"></div>
+
+    <button id="btnClear" class="btn-warning" onclick="uiClear()">Vider l'arbre</button>
+
+    <div class="separator"></div>
+
+    <div id="speed-control">
+        <span style="font-size:13px; color:#aaa;">Vitesse :</span>
+        <button class="speed-btn" onclick="setSpeed(0.25)">×0.25</button>
+        <button class="speed-btn" onclick="setSpeed(0.5)">×0.5</button>
+        <button class="speed-btn active" onclick="setSpeed(1)">×1</button>
+        <button class="speed-btn" onclick="setSpeed(2)">×2</button>
+        <button class="speed-btn" onclick="setSpeed(5)">×5</button>
+    </div>
+</div>
+
+<div id="status-banner">
+    <div id="status-icon"></div>
+    <div id="status-text">Arbre initialisé. Prêt.</div>
+</div>
+
+<div id="tree-viewport">
+    <div id="tree-world">
+        <div id="tree-container">
+            <svg id="edges"></svg>
+            <div id="nodes"></div>
+        </div>
+    </div>
+</div>
+
+<div id="zoom-controls">
+    <button onclick="zoomIn()" title="Zoom +">+</button>
+    <div id="zoom-level">100%</div>
+    <button onclick="zoomOut()" title="Zoom −">−</button>
+    <button onclick="zoomReset()" title="Recentrer" style="font-size:16px;">⌂</button>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
+

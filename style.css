@@ -1,0 +1,506 @@
+/* ============================================================
+   ALGOVISUAL — Style principal
+   Refonte pédagogique inspirée 3Blue1Brown
+   ============================================================ */
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    background-color: #1a1a2e;
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ============================================================
+   HEADER — Barre de contrôle fixe
+   ============================================================ */
+#header {
+    background-color: #16213e;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+}
+
+#header .separator {
+    width: 1px;
+    height: 30px;
+    background-color: #334;
+}
+
+input[type="number"], input[type="text"] {
+    padding: 8px 10px;
+    border-radius: 5px;
+    border: 1px solid #334;
+    background-color: #0f3460;
+    color: white;
+    font-size: 14px;
+}
+input[type="number"] { width: 90px; }
+input[type="text"] { width: 220px; }
+
+button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    background-color: #3498db;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.3s;
+    white-space: nowrap;
+}
+button:hover { background-color: #2980b9; }
+button:disabled { background-color: #333; cursor: not-allowed; }
+
+.btn-danger { background-color: #e74c3c; }
+.btn-danger:hover { background-color: #c0392b; }
+.btn-warning { background-color: #e67e22; }
+.btn-warning:hover { background-color: #d35400; }
+.btn-success { background-color: #2ecc71; }
+.btn-success:hover { background-color: #27ae60; }
+
+/* ============================================================
+   BANNIÈRE DE STATUT — Contextuelle, centrée, fixe
+   ============================================================ */
+#status-banner {
+    position: fixed;
+    top: 62px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 99;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 24px;
+    border-radius: 0 0 12px 12px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    pointer-events: none;
+    transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s, color 0.3s;
+    background-color: rgba(22, 33, 62, 0.95);
+    border: 2px solid #334;
+    border-top: none;
+    color: #8899aa;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+#status-icon {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background-color: #445;
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+#status-text { line-height: 1.3; }
+
+/* --- Modes couleur de la bannière --- */
+#status-banner.mode-search {
+    background-color: rgba(90, 61, 19, 0.95);
+    border-color: #f39c12;
+    color: #fde9c0;
+    box-shadow: 0 4px 20px rgba(243, 156, 18, 0.3);
+}
+#status-banner.mode-search #status-icon {
+    background-color: #f39c12;
+    box-shadow: 0 0 8px #f39c12;
+}
+#status-banner.mode-rebalance {
+    background-color: rgba(18, 64, 90, 0.95);
+    border-color: #00ccff;
+    color: #c0efff;
+    box-shadow: 0 4px 20px rgba(0, 204, 255, 0.3);
+}
+#status-banner.mode-rebalance #status-icon {
+    background-color: #00ccff;
+    box-shadow: 0 0 8px #00ccff;
+}
+#status-banner.mode-rotate {
+    background-color: rgba(90, 19, 19, 0.95);
+    border-color: #e74c3c;
+    color: #ffc0c0;
+    box-shadow: 0 4px 20px rgba(231, 76, 60, 0.3);
+}
+#status-banner.mode-rotate #status-icon {
+    background-color: #e74c3c;
+    box-shadow: 0 0 8px #e74c3c;
+}
+#status-banner.mode-insert {
+    background-color: rgba(19, 90, 42, 0.95);
+    border-color: #2ecc71;
+    color: #c0ffd8;
+    box-shadow: 0 4px 20px rgba(46, 204, 113, 0.3);
+}
+#status-banner.mode-insert #status-icon {
+    background-color: #2ecc71;
+    box-shadow: 0 0 8px #2ecc71;
+}
+#status-banner.mode-done {
+    background-color: rgba(22, 33, 62, 0.95);
+    border-color: #556;
+    color: #aabbcc;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+#status-banner.mode-done #status-icon {
+    background-color: #556;
+    box-shadow: none;
+}
+#status-banner.mode-delete {
+    background-color: rgba(90, 25, 19, 0.95);
+    border-color: #e74c3c;
+    color: #ffc0b8;
+    box-shadow: 0 4px 20px rgba(231, 76, 60, 0.25);
+}
+#status-banner.mode-delete #status-icon {
+    background-color: #e74c3c;
+    box-shadow: 0 0 8px #e74c3c;
+}
+
+/* ============================================================
+   CONTRÔLE DE VITESSE
+   ============================================================ */
+#speed-control {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.speed-btn {
+    padding: 5px 10px;
+    font-size: 12px;
+    background-color: #0f3460;
+    border: 1px solid #334;
+    border-radius: 4px;
+    color: #8899aa;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.speed-btn:hover { background-color: #1a4a7a; color: white; }
+.speed-btn.active {
+    background-color: #3498db;
+    border-color: #3498db;
+    color: white;
+    font-weight: bold;
+}
+
+/* ============================================================
+   VIEWPORT — Zone d'affichage de l'arbre
+   ============================================================ */
+#tree-viewport {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    cursor: grab;
+    background-color: #1a1a2e;
+    background-image:
+        radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 30px 30px;
+}
+#tree-viewport:active { cursor: grabbing; }
+
+#tree-world {
+    position: absolute;
+    top: 0; left: 0;
+    width: 0; height: 0;
+    transform-origin: 0 0;
+}
+#tree-container {
+    position: absolute;
+    top: 0; left: 0;
+    width: 10000px; height: 10000px;
+}
+
+/* ============================================================
+   ARÊTES SVG
+   ============================================================ */
+svg#edges {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+svg#edges line {
+    stroke: #334;
+    stroke-width: 2.5px;
+    transition: stroke 0.3s;
+}
+
+#nodes {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+}
+
+/* ============================================================
+   NŒUD — Structure de base
+   Chaque .node contient :
+     - .node-ring  (SVG circulaire pour les arcs de poids)
+     - .node-core  (le cercle principal avec la valeur)
+     - .node-badges (hauteur + balance factor)
+     - .rotation-arrow (SVG flèche de rotation, ajoutée dynamiquement)
+   ============================================================ */
+.node {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    transform: translate(-50%, -50%) scale(1);
+    transition: left 0.6s ease-in-out, top 0.6s ease-in-out;
+    user-select: none;
+    z-index: 1;
+}
+
+/* --- Anneau SVG autour du nœud (arcs de poids gauche/droite) --- */
+.node-ring {
+    position: absolute;
+    top: -8px; left: -8px;
+    width: 76px; height: 76px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+.node-ring.visible { opacity: 1; }
+
+.node-ring .arc-left,
+.node-ring .arc-right {
+    fill: none;
+    stroke-width: 4;
+    stroke-linecap: round;
+    opacity: 0.9;
+    transition: stroke 0.3s, opacity 0.3s;
+}
+.node-ring .arc-left  { stroke: #f1c40f; }  /* Jaune — sous-arbre gauche */
+.node-ring .arc-right { stroke: #e74c3c; }  /* Rouge — sous-arbre droit  */
+
+/* --- Cœur du nœud (le cercle avec la valeur) --- */
+.node-core {
+    position: absolute;
+    top: 0; left: 0;
+    width: 60px; height: 60px;
+    background: radial-gradient(circle at 35% 35%, #4a4a6a, #2a2a3e);
+    border: 3px solid #556;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 18px;
+    color: #eee;
+    z-index: 2;
+    transition: border-color 0.3s, box-shadow 0.3s, background 0.3s, transform 0.3s;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.5);
+}
+
+/* --- Badges hauteur & balance factor --- */
+.node-badges {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 3;
+}
+.badge-height {
+    position: absolute;
+    top: -8px; right: -8px;
+    background: #2ecc71;
+    color: #000;
+    font-size: 11px;
+    padding: 1px 5px;
+    border-radius: 10px;
+    font-weight: bold;
+    min-width: 20px;
+    text-align: center;
+    transition: transform 0.3s, background 0.3s;
+}
+.badge-bf {
+    position: absolute;
+    bottom: -8px; left: -8px;
+    background: #e67e22;
+    color: #000;
+    font-size: 11px;
+    padding: 1px 5px;
+    border-radius: 10px;
+    font-weight: bold;
+    min-width: 20px;
+    text-align: center;
+    transition: transform 0.3s, background 0.3s, color 0.3s;
+}
+
+/* BF critique → rouge vif + pulse */
+.badge-bf.critical {
+    background: #e74c3c;
+    color: #fff;
+    animation: pulseBadge 0.6s ease-in-out infinite alternate;
+}
+@keyframes pulseBadge {
+    from { transform: scale(1); }
+    to   { transform: scale(1.25); }
+}
+
+/* Badge qui "pop" quand il se met à jour */
+.badge-height.updated,
+.badge-bf.updated {
+    animation: popBadge 0.4s ease-out;
+}
+@keyframes popBadge {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.4); }
+    100% { transform: scale(1); }
+}
+
+/* --- Flèche de rotation (SVG overlay, ajoutée dynamiquement) --- */
+.rotation-arrow {
+    position: absolute;
+    top: -22px; left: -22px;
+    width: 104px; height: 104px;
+    pointer-events: none;
+    z-index: 4;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.rotation-arrow.visible { opacity: 1; }
+
+.rotation-arrow .arrow-path {
+    fill: none;
+    stroke-width: 3.5;
+    stroke-linecap: round;
+    stroke-dasharray: 200;
+    stroke-dashoffset: 200;
+    transition: stroke-dashoffset 0.6s ease-out;
+}
+.rotation-arrow.visible .arrow-path {
+    stroke-dashoffset: 0;
+}
+.rotation-arrow .arrow-head {
+    fill: none;
+    stroke-width: 3.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Rotation droite = flèche bleue */
+.rotation-arrow.rotate-right .arrow-path,
+.rotation-arrow.rotate-right .arrow-head {
+    stroke: #3498db;
+}
+/* Rotation gauche = flèche rouge */
+.rotation-arrow.rotate-left .arrow-path,
+.rotation-arrow.rotate-left .arrow-head {
+    stroke: #e74c3c;
+}
+
+/* ============================================================
+   ÉTATS VISUELS DES NŒUDS (classes appliquées dynamiquement)
+   ============================================================ */
+
+/* Phase 1 — Descente / Recherche : contour orange lumineux */
+.node.search-path .node-core {
+    border-color: #f39c12;
+    box-shadow: 0 0 20px rgba(243, 156, 18, 0.6), inset 0 0 12px rgba(243, 156, 18, 0.15);
+    background: radial-gradient(circle at 35% 35%, #6a5a2a, #3a3018);
+}
+
+/* Phase 3 — Remontée / Vérification équilibre : contour cyan */
+.node.rebalance-path .node-core {
+    border-color: #00ccff;
+    box-shadow: 0 0 20px rgba(0, 204, 255, 0.5), inset 0 0 12px rgba(0, 204, 255, 0.1);
+    background: radial-gradient(circle at 35% 35%, #2a4a6a, #1a2a3e);
+}
+
+/* Phase 4 — Pivot de rotation : halo rouge pulsant */
+.node.rotate-pivot .node-core {
+    border-color: #e74c3c;
+    box-shadow: 0 0 30px rgba(231, 76, 60, 0.7), inset 0 0 15px rgba(231, 76, 60, 0.15);
+    background: radial-gradient(circle at 35% 35%, #6a2a2a, #3e1a1a);
+    z-index: 10;
+    animation: pulseGlow 0.8s ease-in-out infinite alternate;
+}
+@keyframes pulseGlow {
+    from { box-shadow: 0 0 20px rgba(231, 76, 60, 0.5), inset 0 0 10px rgba(231, 76, 60, 0.1); }
+    to   { box-shadow: 0 0 40px rgba(231, 76, 60, 0.8), inset 0 0 20px rgba(231, 76, 60, 0.2); }
+}
+
+/* Phase 4 — Enfant qui monte : halo vert */
+.node.rotate-child .node-core {
+    border-color: #2ecc71;
+    box-shadow: 0 0 25px rgba(46, 204, 113, 0.6), inset 0 0 12px rgba(46, 204, 113, 0.1);
+    background: radial-gradient(circle at 35% 35%, #2a6a3a, #1a3e2a);
+    z-index: 10;
+}
+
+/* Sous-arbre transféré pendant une rotation */
+.node.transferred-subtree .node-core {
+    border-color: #9b59b6;
+    box-shadow: 0 0 18px rgba(155, 89, 182, 0.5);
+    background: radial-gradient(circle at 35% 35%, #4a2a6a, #2e1a3e);
+}
+
+/* Phase 2 — Nouveau nœud inséré : brillance temporaire */
+.node.just-inserted .node-core {
+    border-color: #2ecc71;
+    box-shadow: 0 0 30px rgba(46, 204, 113, 0.7), inset 0 0 15px rgba(46, 204, 113, 0.2);
+    animation: insertGlow 1s ease-out;
+}
+@keyframes insertGlow {
+    0%   { box-shadow: 0 0 60px rgba(46, 204, 113, 1), inset 0 0 25px rgba(46, 204, 113, 0.4); }
+    100% { box-shadow: 0 0 30px rgba(46, 204, 113, 0.7), inset 0 0 15px rgba(46, 204, 113, 0.2); }
+}
+
+/* Phase 2 — Suppression : clignotement rouge */
+.node.deleting .node-core {
+    border-color: #e74c3c;
+    animation: blinkDelete 0.3s ease-in-out 3;
+}
+@keyframes blinkDelete {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.2; }
+}
+
+/* ============================================================
+   CONTRÔLES ZOOM
+   ============================================================ */
+#zoom-controls {
+    position: fixed;
+    bottom: 20px; right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 50;
+}
+#zoom-controls button {
+    width: 42px; height: 42px;
+    padding: 0;
+    font-size: 22px; font-weight: bold;
+    border-radius: 8px;
+    background-color: #16213e;
+    border: 1px solid #334;
+    display: flex;
+    align-items: center; justify-content: center;
+}
+#zoom-controls button:hover { background-color: #1a4a7a; }
+#zoom-level {
+    text-align: center;
+    font-size: 11px;
+    color: #8899aa;
+}
+
