@@ -16,27 +16,182 @@ html, body {
 }
 
 /* ============================================================
-   HEADER — Barre de contrôle fixe
+   NAVBAR — Barre de navigation globale
    ============================================================ */
-#header {
+#navbar {
     background-color: #16213e;
-    padding: 12px 20px;
+    padding: 0 20px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    height: 48px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 100;
+    top: 0; left: 0; right: 0;
+    z-index: 200;
 }
 
-#header .separator {
-    width: 1px;
-    height: 30px;
-    background-color: #334;
+.nav-logo {
+    font-size: 18px;
+    font-weight: 800;
+    color: #3498db;
+    text-decoration: none;
+    letter-spacing: -0.5px;
+    margin-right: 32px;
+    flex-shrink: 0;
+}
+.nav-logo:hover { color: #5dade2; }
+
+.nav-links {
+    display: flex;
+    gap: 4px;
+}
+
+.nav-link {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #8899aa;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+}
+.nav-link:hover { background: rgba(255,255,255,0.06); color: #ccc; }
+.nav-link.active {
+    background: rgba(52, 152, 219, 0.15);
+    color: #3498db;
+    font-weight: 600;
+}
+.nav-link.disabled {
+    color: #445;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ============================================================
+   PANNEAU DE CONTRÔLE — Fenêtre flottante
+   ============================================================ */
+#control-panel {
+    position: fixed;
+    top: 60px;
+    left: 14px;
+    width: 260px;
+    z-index: 150;
+    background: rgba(16, 21, 38, 0.95);
+    border: 1px solid #2a3050;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    overflow: hidden;
+    transition: width 0.3s, box-shadow 0.3s;
+}
+
+#control-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: rgba(52, 152, 219, 0.08);
+    border-bottom: 1px solid #2a3050;
+    cursor: move; /* draggable */
+    user-select: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: #aabbcc;
+}
+
+#control-panel-toggle {
+    width: 24px; height: 24px;
+    padding: 0;
+    font-size: 16px;
+    line-height: 1;
+    background: transparent;
+    border: 1px solid #334;
+    border-radius: 6px;
+    color: #8899aa;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#control-panel-toggle:hover {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+}
+
+#control-panel-body {
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: max-height 0.3s ease, opacity 0.2s ease, padding 0.3s ease;
+    max-height: 500px;
+    opacity: 1;
+    overflow: hidden;
+}
+
+#control-panel-body.collapsed {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+/* --- Sections du panneau --- */
+.cp-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cp-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #667;
+}
+
+.cp-row {
+    display: flex;
+    gap: 6px;
+}
+
+.cp-row input[type="number"],
+.cp-row input[type="text"] {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+}
+
+.cp-row button {
+    flex-shrink: 0;
+    width: 38px;
+    height: 36px;
+    padding: 0;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+}
+
+.cp-speed-row {
+    display: flex;
+    gap: 3px;
+}
+
+.cp-speed-row .speed-btn {
+    flex: 1;
+    text-align: center;
+    padding: 5px 0;
+}
+
+.cp-full-btn {
+    width: 100%;
+    padding: 8px;
+    font-size: 13px;
+    border-radius: 6px;
 }
 
 input[type="number"], input[type="text"] {
@@ -76,7 +231,7 @@ button:disabled { background-color: #333; cursor: not-allowed; }
    ============================================================ */
 #status-banner {
     position: fixed;
-    top: 62px;
+    top: 48px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 99;
@@ -203,7 +358,7 @@ button:disabled { background-color: #333; cursor: not-allowed; }
    ============================================================ */
 #tree-viewport {
     position: fixed;
-    top: 60px;
+    top: 48px;
     left: 0;
     right: 0;
     bottom: 0;
@@ -243,6 +398,21 @@ svg#edges line {
     stroke-width: 2.5px;
     transition: stroke 0.3s;
 }
+
+/* --- Arêtes animées (overlays colorés par-dessus les lignes grises) --- */
+svg#edges line.edge-overlay {
+    stroke-width: 3.5px;
+    stroke-linecap: round;
+    pointer-events: none;
+    /* Le dash est contrôlé dynamiquement par JS */
+}
+
+/* Couleurs des arêtes selon le contexte */
+svg#edges line.edge-search   { stroke: #f39c12; filter: drop-shadow(0 0 4px rgba(243, 156, 18, 0.5)); }
+svg#edges line.edge-rebalance { stroke: #00ccff; filter: drop-shadow(0 0 4px rgba(0, 204, 255, 0.4)); }
+svg#edges line.edge-rotate   { stroke: #e74c3c; filter: drop-shadow(0 0 4px rgba(231, 76, 60, 0.5)); }
+svg#edges line.edge-insert   { stroke: #2ecc71; filter: drop-shadow(0 0 4px rgba(46, 204, 113, 0.5)); }
+svg#edges line.edge-delete   { stroke: #e74c3c; filter: drop-shadow(0 0 4px rgba(231, 76, 60, 0.4)); }
 
 #nodes {
     position: absolute;

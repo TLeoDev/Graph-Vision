@@ -3,42 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualisation d'Arbre AVL</title>
+    <title>AlgoVisual — Arbre AVL</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div id="header">
-    <input type="number" id="valInput" placeholder="Valeur" />
-    <button id="btnInsert" onclick="uiInsert()">Insérer</button>
-    <button id="btnDelete" class="btn-danger" onclick="uiDelete()">Supprimer</button>
+<!-- ===== NAVBAR — Navigation globale (future) ===== -->
+<nav id="navbar">
+    <a href="#" class="nav-logo">Visualisation de graphes</a>
+    <div class="nav-links">
+        <a href="#" class="nav-link active">Arbre AVL</a>
+        <a href="#" class="nav-link disabled" title="Bientôt disponible">Dijkstra</a>
+        <a href="#" class="nav-link disabled" title="Bientôt disponible">BFS / DFS</a>
+        <a href="#" class="nav-link disabled" title="Bientôt disponible">Tas binaire</a>
+    </div>
+</nav>
 
-    <div class="separator"></div>
+<!-- ===== PANNEAU DE CONTRÔLE FLOTTANT ===== -->
+<div id="control-panel">
+    <div id="control-panel-header">
+        <span>🔧 Contrôles AVL</span>
+        <button id="control-panel-toggle" onclick="toggleControlPanel()" title="Réduire">−</button>
+    </div>
+    <div id="control-panel-body">
+        <!-- Insertion / Suppression -->
+        <div class="cp-section">
+            <label class="cp-label">Valeur</label>
+            <div class="cp-row">
+                <input type="number" id="valInput" placeholder="Ex: 42" />
+                <button id="btnInsert" onclick="uiInsert()" title="Insérer">＋</button>
+                <button id="btnDelete" class="btn-danger" onclick="uiDelete()" title="Supprimer">✕</button>
+            </div>
+        </div>
 
-    <input type="text" id="listInput" placeholder="Liste: 5,3,8,1,4,..." />
-    <button id="btnBuild" class="btn-success" onclick="uiBuildFromList()">Construire</button>
+        <!-- Construction depuis liste -->
+        <div class="cp-section">
+            <label class="cp-label">Construire depuis une liste</label>
+            <div class="cp-row">
+                <input type="text" id="listInput" placeholder="5, 3, 8, 1, 4 …" />
+                <button id="btnBuild" class="btn-success" onclick="uiBuildFromList()" title="Construire">▶</button>
+            </div>
+        </div>
 
-    <div class="separator"></div>
+        <!-- Vitesse -->
+        <div class="cp-section">
+            <label class="cp-label">Vitesse d'animation</label>
+            <div class="cp-speed-row">
+                <button class="speed-btn" onclick="setSpeed(0.25)">×0.25</button>
+                <button class="speed-btn" onclick="setSpeed(0.5)">×0.5</button>
+                <button class="speed-btn active" onclick="setSpeed(1)">×1</button>
+                <button class="speed-btn" onclick="setSpeed(2)">×2</button>
+                <button class="speed-btn" onclick="setSpeed(5)">×5</button>
+            </div>
+        </div>
 
-    <button id="btnClear" class="btn-warning" onclick="uiClear()">Vider l'arbre</button>
-
-    <div class="separator"></div>
-
-    <div id="speed-control">
-        <span style="font-size:13px; color:#aaa;">Vitesse :</span>
-        <button class="speed-btn" onclick="setSpeed(0.25)">×0.25</button>
-        <button class="speed-btn" onclick="setSpeed(0.5)">×0.5</button>
-        <button class="speed-btn active" onclick="setSpeed(1)">×1</button>
-        <button class="speed-btn" onclick="setSpeed(2)">×2</button>
-        <button class="speed-btn" onclick="setSpeed(5)">×5</button>
+        <!-- Actions -->
+        <div class="cp-section">
+            <button id="btnClear" class="btn-warning cp-full-btn" onclick="uiClear()">🗑 Vider l'arbre</button>
+        </div>
     </div>
 </div>
 
+<!-- ===== BANNIÈRE DE STATUT ===== -->
 <div id="status-banner">
     <div id="status-icon"></div>
     <div id="status-text">Arbre initialisé. Prêt.</div>
 </div>
 
+<!-- ===== VIEWPORT DE L'ARBRE ===== -->
 <div id="tree-viewport">
     <div id="tree-world">
         <div id="tree-container">
@@ -48,6 +80,7 @@
     </div>
 </div>
 
+<!-- ===== CONTRÔLES ZOOM ===== -->
 <div id="zoom-controls">
     <button onclick="zoomIn()" title="Zoom +">+</button>
     <div id="zoom-level">100%</div>

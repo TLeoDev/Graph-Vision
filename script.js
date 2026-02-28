@@ -40,6 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     vp.addEventListener('mousedown', e => {
         if (e.button !== 0) return;
+        // Ne pas panner si le clic est sur le panneau de contrôle
+        if (e.target.closest('#control-panel')) return;
         isPanning = true;
         startPanX = e.clientX - panX;
         startPanY = e.clientY - panY;
@@ -66,7 +68,51 @@ document.addEventListener('DOMContentLoaded', () => {
         panY = my - (my - panY) * (scale / oldScale);
         applyTransform();
     }, { passive: false });
+
+    // --- Panneau de contrôle : drag ---
+    initControlPanelDrag();
 });
+
+// ===================== Panneau de contrôle flottant =====================
+
+/** Toggle collapse/expand du panneau */
+function toggleControlPanel() {
+    const body = document.getElementById('control-panel-body');
+    const btn = document.getElementById('control-panel-toggle');
+    body.classList.toggle('collapsed');
+    btn.textContent = body.classList.contains('collapsed') ? '+' : '−';
+}
+
+/** Rend le panneau draggable par son header */
+function initControlPanelDrag() {
+    const panel = document.getElementById('control-panel');
+    const header = document.getElementById('control-panel-header');
+    let isDragging = false;
+    let offsetX, offsetY;
+
+    header.addEventListener('mousedown', e => {
+        // Ignore si c'est le bouton toggle
+        if (e.target.closest('#control-panel-toggle')) return;
+        isDragging = true;
+        const rect = panel.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+        e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', e => {
+        if (!isDragging) return;
+        const x = e.clientX - offsetX;
+        const y = e.clientY - offsetY;
+        // Contraindre dans la fenêtre
+        const maxX = window.innerWidth - panel.offsetWidth - 4;
+        const maxY = window.innerHeight - 60;
+        panel.style.left = Math.max(4, Math.min(x, maxX)) + 'px';
+        panel.style.top  = Math.max(48, Math.min(y, maxY)) + 'px';
+    });
+
+    window.addEventListener('mouseup', () => { isDragging = false; });
+}
 
 // ===================== Noeud AVL =====================
 class Node {
@@ -288,13 +334,133 @@ function updateDOMTree() {
     });
 
     Array.from(edgesContainer.children).forEach(child => {
-        if (!activeEdgeIds.has(child.id)) child.remove();
+        if (child.classList.contains('edge-overlay')) {
+            // Overlay : garder si l'arête de base correspondante existe encore
+            const baseId = `edge-${child.dataset.parent}-${child.dataset.child}`;
+            if (!activeEdgeIds.has(baseId)) child.remove();
+        } else {
+            // Ligne de base : garder si dans la liste active
+            if (!activeEdgeIds.has(child.id)) child.remove();
+        }
     });
 }
 
 // ============================================================
 // EFFETS VISUELS PÉDAGOGIQUES
 // ============================================================
+
+/**
+ * Anime une arête entre parentId et childId avec une couleur progressive.
+ * Crée une <line> overlay par-dessus la ligne grise existante.
+ * La ligne se dessine progressivement via stroke-dashoffset animé.
+ *
+ * @param {number} parentId - ID du nœud parent
+ * @param {number} childId  - ID du nœud enfant
+ * @param {string} colorClass - Classe CSS : 'edge-search', 'edge-rebalance', 'edge-rotate', etc.
+ * @param {number} duration - Durée de l'animation en ms (défaut: animSpeed * 0.7)
+ * @returns {Promise} - Se résout quand l'animation est terminée
+ */
+function highlightEdge(parentId, childId, colorClass, duration) {
+    if (isInstant) return Promise.resolve();
+    duration = duration || Math.round(animSpeed * 0.7);
+
+    const edgesContainer = document.getElementById('edges');
+    const overlayId = `edge-overlay-${parentId}-${childId}`;
+
+    // Supprime un éventuel overlay existant sur cette arête
+    const existing = document.getElementById(overlayId);
+    if (existing) existing.remove();
+
+    // Récupère la ligne de base pour copier ses coordonnées
+    const baseLine = document.getElementById(`edge-${parentId}-${childId}`);
+    if (!baseLine) return Promise.resolve();
+
+    const x1 = baseLine.getAttribute('x1');
+    const y1 = baseLine.getAttribute('y1');
+    const x2 = baseLine.getAttribute('x2');
+    const y2 = baseLine.getAttribute('y2');
+
+    // Calcule la longueur de la ligne
+    const dx = parseFloat(x2) - parseFloat(x1);
+    const dy = parseFloat(y2) - parseFloat(y1);
+    const length = Math.sqrt(dx * dx + dy * dy);
+
+    // Crée la ligne overlay
+    const overlay = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    overlay.id = overlayId;
+    overlay.classList.add('edge-overlay', colorClass);
+    overlay.dataset.parent = parentId;
+    overlay.dataset.child = childId;
+    overlay.setAttribute('x1', x1);
+    overlay.setAttribute('y1', y1);
+    overlay.setAttribute('x2', x2);
+    overlay.setAttribute('y2', y2);
+
+    // Commence invisible (dashoffset = longueur totale)
+    overlay.style.strokeDasharray = length;
+    overlay.style.strokeDashoffset = length;
+    edgesContainer.appendChild(overlay);
+
+    // Force reflow
+    void overlay.getBBox();
+
+    // Anime le trait progressif
+    overlay.style.transition = `stroke-dashoffset ${duration}ms ease-in-out`;
+    overlay.style.strokeDashoffset = '0';
+
+    return new Promise(resolve => setTimeout(resolve, duration));
+}
+
+/**
+ * Retire le highlight d'une arête spécifique (fade out).
+ */
+function unhighlightEdge(parentId, childId) {
+    const overlay = document.getElementById(`edge-overlay-${parentId}-${childId}`);
+    if (!overlay) return;
+    overlay.style.transition = 'opacity 0.3s ease';
+    overlay.style.opacity = '0';
+    setTimeout(() => overlay.remove(), 300);
+}
+
+/**
+ * Retire TOUS les overlays d'arêtes.
+ */
+function clearAllEdgeHighlights() {
+    document.querySelectorAll('#edges .edge-overlay').forEach(el => el.remove());
+}
+
+/**
+ * Colore instantanément une arête (pas d'animation progressive, juste un highlight).
+ * Utile pour la remontée où on veut montrer le chemin déjà parcouru.
+ */
+function setEdgeColor(parentId, childId, colorClass) {
+    if (isInstant) return;
+    const overlayId = `edge-overlay-${parentId}-${childId}`;
+    let overlay = document.getElementById(overlayId);
+
+    if (!overlay) {
+        const edgesContainer = document.getElementById('edges');
+        const baseLine = document.getElementById(`edge-${parentId}-${childId}`);
+        if (!baseLine) return;
+
+        overlay = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        overlay.id = overlayId;
+        overlay.dataset.parent = parentId;
+        overlay.dataset.child = childId;
+        overlay.setAttribute('x1', baseLine.getAttribute('x1'));
+        overlay.setAttribute('y1', baseLine.getAttribute('y1'));
+        overlay.setAttribute('x2', baseLine.getAttribute('x2'));
+        overlay.setAttribute('y2', baseLine.getAttribute('y2'));
+        edgesContainer.appendChild(overlay);
+    }
+
+    // Remplace la classe couleur
+    overlay.classList.remove('edge-search', 'edge-rebalance', 'edge-rotate', 'edge-insert', 'edge-delete');
+    overlay.classList.add('edge-overlay', colorClass);
+    overlay.style.strokeDasharray = 'none';
+    overlay.style.strokeDashoffset = '0';
+    overlay.style.opacity = '1';
+}
 
 /**
  * Affiche les arcs de poids (ring) autour d'un nœud pendant la phase de remontée.
@@ -517,6 +683,7 @@ async function rightRotate(y) {
 
     // --- Phase 4e : Recalculer layout + FLIP animation ---
     setStatus(`Rotation Droite : ${x.val} prend la place de ${y.val}`, 'rotate');
+    clearAllEdgeHighlights();
     updateDOMTree();
     animateFromSnapshot(before);
     await waitForTransitions();
@@ -567,6 +734,7 @@ async function leftRotate(x) {
 
     // --- Phase 4e : Recalculer layout + FLIP animation ---
     setStatus(`Rotation Gauche : ${y.val} prend la place de ${x.val}`, 'rotate');
+    clearAllEdgeHighlights();
     updateDOMTree();
     animateFromSnapshot(before);
     await waitForTransitions();
@@ -612,9 +780,17 @@ async function insertAsync(node, val) {
     unhighlight(node.id, 'search-path');
 
     if (val < node.val) {
+        // Anime l'arête vers l'enfant gauche (si l'enfant existe déjà)
+        if (node.left) await highlightEdge(node.id, node.left.id, 'edge-search');
         node.left = await insertAsync(node.left, val);
+        // Phase 3 remontée : change l'arête en cyan
+        if (node.left) setEdgeColor(node.id, node.left.id, 'edge-rebalance');
     } else if (val > node.val) {
+        // Anime l'arête vers l'enfant droit (si l'enfant existe déjà)
+        if (node.right) await highlightEdge(node.id, node.right.id, 'edge-search');
         node.right = await insertAsync(node.right, val);
+        // Phase 3 remontée : change l'arête en cyan
+        if (node.right) setEdgeColor(node.id, node.right.id, 'edge-rebalance');
     } else {
         setStatus(`Valeur ${val} déjà présente !`, 'done');
         return node;
@@ -646,37 +822,36 @@ async function insertAsync(node, val) {
     // PHASE 4 : Déséquilibre détecté → rotation
     // ──────────────────────────────────────────────
     if (balance > 1 && val < node.left.val) {
-        // Cas Gauche-Gauche → Rotation Droite simple
         hideBalanceRing(node.id);
         unhighlight(node.id, 'rebalance-path');
+        clearAllEdgeHighlights();
         setStatus(`Nœud ${node.val} : bf = ${balance} → Rotation Droite`, 'rotate');
         await sleep(animSpeed * 0.5);
         node = await rightRotate(node);
 
     } else if (balance < -1 && val > node.right.val) {
-        // Cas Droite-Droite → Rotation Gauche simple
         hideBalanceRing(node.id);
         unhighlight(node.id, 'rebalance-path');
+        clearAllEdgeHighlights();
         setStatus(`Nœud ${node.val} : bf = ${balance} → Rotation Gauche`, 'rotate');
         await sleep(animSpeed * 0.5);
         node = await leftRotate(node);
 
     } else if (balance > 1 && val > node.left.val) {
-        // Cas Gauche-Droite → Double Rotation
         hideBalanceRing(node.id);
         unhighlight(node.id, 'rebalance-path');
+        clearAllEdgeHighlights();
         setStatus(`Nœud ${node.val} : bf = ${balance} → Double Rotation (Gauche puis Droite)`, 'rotate');
         await sleep(animSpeed);
         node.left = await leftRotate(node.left);
-        // Pause entre les deux rotations
         setStatus(`… puis Rotation Droite sur ${node.val}`, 'rotate');
         await sleep(animSpeed * 0.5);
         node = await rightRotate(node);
 
     } else if (balance < -1 && val < node.right.val) {
-        // Cas Droite-Gauche → Double Rotation
         hideBalanceRing(node.id);
         unhighlight(node.id, 'rebalance-path');
+        clearAllEdgeHighlights();
         setStatus(`Nœud ${node.val} : bf = ${balance} → Double Rotation (Droite puis Gauche)`, 'rotate');
         await sleep(animSpeed);
         node.right = await rightRotate(node.right);
@@ -712,9 +887,13 @@ async function deleteAsync(node, val) {
     unhighlight(node.id, 'search-path');
 
     if (val < node.val) {
+        if (node.left) await highlightEdge(node.id, node.left.id, 'edge-delete');
         node.left = await deleteAsync(node.left, val);
+        if (node.left) setEdgeColor(node.id, node.left.id, 'edge-rebalance');
     } else if (val > node.val) {
+        if (node.right) await highlightEdge(node.id, node.right.id, 'edge-delete');
         node.right = await deleteAsync(node.right, val);
+        if (node.right) setEdgeColor(node.id, node.right.id, 'edge-rebalance');
     } else {
         // ──────────────────────────────────────────────
         // PHASE 2 : Action — suppression du nœud trouvé
@@ -771,6 +950,7 @@ async function deleteAsync(node, val) {
     if (balance > 1 && getBalance(node.left) >= 0) {
         hideBalanceRing(node.id);
         unhighlight(node.id, 'rebalance-path');
+        clearAllEdgeHighlights();
         setStatus(`Nœud ${node.val} : bf = ${balance} → Rotation Droite`, 'rotate');
         await sleep(animSpeed * 0.5);
         node = await rightRotate(node);
@@ -778,6 +958,7 @@ async function deleteAsync(node, val) {
     } else if (balance > 1 && getBalance(node.left) < 0) {
         hideBalanceRing(node.id);
         unhighlight(node.id, 'rebalance-path');
+        clearAllEdgeHighlights();
         setStatus(`Nœud ${node.val} : bf = ${balance} → Double Rotation (Gauche puis Droite)`, 'rotate');
         await sleep(animSpeed);
         node.left = await leftRotate(node.left);
@@ -788,6 +969,7 @@ async function deleteAsync(node, val) {
     } else if (balance < -1 && getBalance(node.right) <= 0) {
         hideBalanceRing(node.id);
         unhighlight(node.id, 'rebalance-path');
+        clearAllEdgeHighlights();
         setStatus(`Nœud ${node.val} : bf = ${balance} → Rotation Gauche`, 'rotate');
         await sleep(animSpeed * 0.5);
         node = await leftRotate(node);
@@ -795,6 +977,7 @@ async function deleteAsync(node, val) {
     } else if (balance < -1 && getBalance(node.right) > 0) {
         hideBalanceRing(node.id);
         unhighlight(node.id, 'rebalance-path');
+        clearAllEdgeHighlights();
         setStatus(`Nœud ${node.val} : bf = ${balance} → Double Rotation (Droite puis Gauche)`, 'rotate');
         await sleep(animSpeed);
         node.right = await rightRotate(node.right);
@@ -895,6 +1078,19 @@ function renderLines() {
             line.setAttribute('y1', py);
             line.setAttribute('x2', cx);
             line.setAttribute('y2', cy);
+
+            // Met à jour le strokeDasharray des overlays si la longueur change
+            if (line.classList.contains('edge-overlay') && line.style.strokeDasharray !== 'none') {
+                const dx = cx - px;
+                const dy = cy - py;
+                const len = Math.sqrt(dx * dx + dy * dy);
+                // Garde le ratio d'avancement
+                const oldLen = parseFloat(line.style.strokeDasharray) || len;
+                const oldOffset = parseFloat(line.style.strokeDashoffset) || 0;
+                const ratio = oldLen > 0 ? oldOffset / oldLen : 0;
+                line.style.strokeDasharray = len;
+                line.style.strokeDashoffset = len * ratio;
+            }
         }
     });
     requestAnimationFrame(renderLines);
@@ -914,6 +1110,7 @@ async function uiInsert() {
 
     root = await insertAsync(root, val);
 
+    clearAllEdgeHighlights();
     updateDOMTree();
     setStatus(`✓ Insertion de ${val} terminée.`, 'done');
     isAnimating = false;
@@ -931,6 +1128,7 @@ async function uiDelete() {
 
     root = await deleteAsync(root, val);
 
+    clearAllEdgeHighlights();
     updateDOMTree();
     setStatus(`✓ Suppression de ${val} terminée.`, 'done');
     isAnimating = false;
