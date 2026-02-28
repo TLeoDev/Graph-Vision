@@ -45,6 +45,15 @@
             </div>
         </div>
 
+        <!-- Génération Aléatoire -->
+        <div class="cp-section">
+            <label class="cp-label">Générer aléatoirement</label>
+            <div class="cp-row">
+                <input type="number" id="randomCount" placeholder="Nb nœuds (ex: 20)" min="1" max="100" />
+                <button id="btnRandom" class="btn-success" onclick="uiGenerateRandom()" title="Générer">🎲</button>
+            </div>
+        </div>
+
         <!-- Vitesse -->
         <div class="cp-section">
             <label class="cp-label">Vitesse d'animation</label>
@@ -85,7 +94,19 @@
     <button onclick="zoomIn()" title="Zoom +">+</button>
     <div id="zoom-level">100%</div>
     <button onclick="zoomOut()" title="Zoom −">−</button>
-    <button onclick="zoomReset()" title="Recentrer" style="font-size:16px;">⌂</button>
+    <button onclick="zoomReset()" title="Recentrer" style="font-size:28px;">⌂</button>
+</div>
+
+<!-- ===== FOOTER ===== -->
+<div id="footer">
+    <span style="opacity: 0.7;">© 2026 AlgoVisual —</span>
+    <span class="separator">|</span>
+    <span>Créé par : </span>
+    <a href="https://github.com/TLeoDev" target="_blank" title="GitHub de Léo TUAILLON">Léo TUAILLON</a>,
+    <a href="https://github.com/leocdt" target="_blank" title="GitHub de Léo Condat">Léo Condat</a>,
+    <a href="https://github.com/jimmy-legg" target="_blank" title="GitHub de Jimmy Legg">Jimmy Legg</a>
+    <span class="separator">|</span>
+    <a href="LICENSE" target="_blank" title="Voir la licence">Licence MIT</a>
 </div>
 
 <script src="script.js"></script>

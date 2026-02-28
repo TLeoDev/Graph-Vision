@@ -354,14 +354,15 @@ button:disabled { background-color: #333; cursor: not-allowed; }
 }
 
 /* ============================================================
-   VIEWPORT — Zone d'affichage de l'arbre
+   CONTENT VIEWPORT
    ============================================================ */
+/* Ajuster si besoin pour laisser la place au footer */
 #tree-viewport {
     position: fixed;
     top: 48px;
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: 60px; /* Espace augmenté pour le footer plus grand */
     overflow: hidden;
     cursor: grab;
     background-color: #1a1a2e;
@@ -491,7 +492,7 @@ svg#edges line.edge-delete   { stroke: #e74c3c; filter: drop-shadow(0 0 4px rgba
 }
 .badge-height {
     position: absolute;
-    top: -8px; right: -8px;
+    top: -8px; left: -8px; /* Déplacé en haut à gauche */
     background: #2ecc71;
     color: #000;
     font-size: 11px;
@@ -504,7 +505,8 @@ svg#edges line.edge-delete   { stroke: #e74c3c; filter: drop-shadow(0 0 4px rgba
 }
 .badge-bf {
     position: absolute;
-    bottom: -8px; left: -8px;
+    top: -8px; right: -8px; /* Déplacé du bas-gauche vers haut-droite */
+    bottom: auto; left: auto; /* Reset des anciennes positions */
     background: #e67e22;
     color: #000;
     font-size: 11px;
@@ -651,21 +653,26 @@ svg#edges line.edge-delete   { stroke: #e74c3c; filter: drop-shadow(0 0 4px rgba
    ============================================================ */
 #zoom-controls {
     position: fixed;
-    bottom: 20px; right: 20px;
+    bottom: 80px; /* Remonté davantage pour éviter le footer */
+    right: 20px;
     display: flex;
     flex-direction: column;
     gap: 6px;
     z-index: 50;
 }
 #zoom-controls button {
-    width: 42px; height: 42px;
+    width: 64px; height: 64px;
     padding: 0;
-    font-size: 22px; font-weight: bold;
-    border-radius: 8px;
+    font-size: 32px;
+    font-weight: bold;
+    border-radius: 12px;
     background-color: #16213e;
     border: 1px solid #334;
     display: flex;
     align-items: center; justify-content: center;
+    cursor: pointer;
+    color: #8899aa;
+    transition: background 0.2s, color 0.2s;
 }
 #zoom-controls button:hover { background-color: #1a4a7a; }
 #zoom-level {
@@ -674,3 +681,38 @@ svg#edges line.edge-delete   { stroke: #e74c3c; filter: drop-shadow(0 0 4px rgba
     color: #8899aa;
 }
 
+/* ============================================================
+   FOOTER
+   ============================================================ */
+#footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 15px 0; /* Padding augmenté pour grossir le footer */
+    background-color: #16213e;
+    border-top: 1px solid #2a3050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px; /* Police augmentée */
+    color: #8899aa;
+    z-index: 200;
+}
+
+#footer a {
+    color: #3498db;
+    text-decoration: none;
+    margin: 0 4px;
+    transition: color 0.2s;
+}
+
+#footer a:hover {
+    color: #5dade2;
+    text-decoration: underline;
+}
+
+#footer span.separator {
+    color: #445;
+    margin: 0 8px;
+}

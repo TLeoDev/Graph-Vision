@@ -150,9 +150,8 @@ function setStatus(msg, mode) {
     if (!mode) {
         if (/rotation/i.test(msg) || /rotate/i.test(msg)) mode = 'rotate';
         else if (/déséquilibre|équilibrage|balance|rééquilibr/i.test(msg)) mode = 'rebalance';
-        else if (/recherche|comparaison/i.test(msg)) mode = 'search';
+        else if (/recherche|comparaison/i.test(msg) || /suppres|trouvé.*suppres/i.test(msg)) mode = 'search';
         else if (/créa|insertion|inséré|construit/i.test(msg)) mode = 'insert';
-        else if (/suppres|trouvé.*suppres/i.test(msg)) mode = 'delete';
         else if (/terminé|prêt|vidé|déjà/i.test(msg)) mode = 'done';
         else mode = 'done';
     }
@@ -343,6 +342,77 @@ function updateDOMTree() {
             if (!activeEdgeIds.has(child.id)) child.remove();
         }
     });
+}
+
+// ============================================================
+// AUTO-FOCUS / TRACKING
+// ============================================================
+
+/**
+ * Centre la vue sur un nœud spécifique de manière fluide si celui-ci est hors champ
+ * ou trop proche des bords.
+ */
+function focusOnNode(node) {
+    if (!node || isPanning) return; // Ne pas interférer si l'utilisateur pan manuellement
+
+    const vp = document.getElementById('tree-viewport');
+    const vpW = vp.clientWidth;
+    const vpH = vp.clientHeight;
+
+    // Position actuelle du nœud à l'écran
+    const screenX = panX + node.x * scale;
+    const screenY = panY + node.y * scale;
+
+    // Zone de confort (marges)
+    const margin = 100;
+
+    // Vérifie si le nœud est hors de la zone de confort
+    if (screenX < margin || screenX > vpW - margin ||
+        screenY < margin || screenY > vpH - margin) {
+
+        // Calcul du pan nécessaire pour centrer le nœud
+        const targetPanX = vpW / 2 - node.x * scale;
+        const targetPanY = vpH / 2 - node.y * scale;
+
+        // Animation fluide vers la cible
+        animatePan(targetPanX, targetPanY);
+    }
+}
+
+let activePanAnimation = null;
+
+function animatePan(targetX, targetY) {
+    if (activePanAnimation) cancelAnimationFrame(activePanAnimation);
+
+    const startX = panX;
+    const startY = panY;
+    const dx = targetX - startX;
+    const dy = targetY - startY;
+
+    // Durée proportionnelle à la distance, mais bornée
+    const distance = Math.sqrt(dx*dx + dy*dy);
+    const duration = Math.min(800, Math.max(300, distance * 0.5));
+    const startTime = performance.now();
+
+    function step(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(1, elapsed / duration);
+
+        // Easing ease-out-cubic
+        const ease = 1 - Math.pow(1 - progress, 3);
+
+        panX = startX + dx * ease;
+        panY = startY + dy * ease;
+        applyTransform();
+
+        if (progress < 1) {
+            activePanAnimation = requestAnimationFrame(step);
+        } else {
+            activePanAnimation = null;
+        }
+    }
+
+    activePanAnimation = requestAnimationFrame(step);
 }
 
 // ============================================================
@@ -657,6 +727,7 @@ async function rightRotate(y) {
     setStatus(`⚠ Déséquilibre ! Rotation Droite : ${x.val} monte ↑, ${y.val} descend ↓`, 'rotate');
     highlight(y.id, 'rotate-pivot');
     highlight(x.id, 'rotate-child');
+    focusOnNode(y); // Tracking pivot
     if (T2) highlightSubtree(T2, 'transferred-subtree');
 
     // --- Phase 4b : Flèche de rotation ---
@@ -708,6 +779,7 @@ async function leftRotate(x) {
     setStatus(`⚠ Déséquilibre ! Rotation Gauche : ${y.val} monte ↑, ${x.val} descend ↓`, 'rotate');
     highlight(x.id, 'rotate-pivot');
     highlight(y.id, 'rotate-child');
+    focusOnNode(x); // Tracking pivot
     if (T2) highlightSubtree(T2, 'transferred-subtree');
 
     // --- Phase 4b : Flèche de rotation ---
@@ -751,7 +823,7 @@ async function leftRotate(x) {
 // INSERTION — Scénario pédagogique en 4 phases
 // ============================================================
 
-async function insertAsync(node, val) {
+async function insertAsync(node, val, parentX, parentY) {
 
     // ──────────────────────────────────────────────
     // PHASE 2 : Création du nœud (feuille atteinte)
@@ -759,7 +831,18 @@ async function insertAsync(node, val) {
     if (!node) {
         setStatus(`✦ Création du nœud ${val}`, 'insert');
         let newNode = new Node(val);
-        updateDOMTree();
+        // Initialise aux coordonnées du parent pour éviter le "jump" de caméra à (0,0)
+        if (parentX !== undefined) newNode.x = parentX;
+        if (parentY !== undefined) newNode.y = parentY;
+
+        updateDOMTree(); // Le nœud sera recalculé correctement ici dès qu'il sera attaché
+
+        // Petit hack : on attache temporairement le tracking sur ce newNode "flottant"
+        // mais updateDOMTree ne le voit pas encore dans "root" car il est retourné après.
+        // On force donc son calcul de position si possible ou on attend le retour récursif.
+
+        // Pour l'instant visuel immédiat :
+        focusOnNode(newNode);
 
         // Animation de brillance temporaire
         if (!isInstant) {
@@ -776,19 +859,22 @@ async function insertAsync(node, val) {
     // ──────────────────────────────────────────────
     setStatus(`🔍 Descente : comparaison avec ${node.val}  (${val} ${val < node.val ? '<' : '>'} ${node.val} → aller à ${val < node.val ? 'gauche' : 'droite'})`, 'search');
     highlight(node.id, 'search-path');
+    focusOnNode(node); // Tracking
     await sleep(animSpeed);
     unhighlight(node.id, 'search-path');
 
     if (val < node.val) {
         // Anime l'arête vers l'enfant gauche (si l'enfant existe déjà)
         if (node.left) await highlightEdge(node.id, node.left.id, 'edge-search');
-        node.left = await insertAsync(node.left, val);
+        // On passe les coordonnées actuelles (node.x, node.y) comme parentX, parentY
+        node.left = await insertAsync(node.left, val, node.x, node.y);
         // Phase 3 remontée : change l'arête en cyan
         if (node.left) setEdgeColor(node.id, node.left.id, 'edge-rebalance');
     } else if (val > node.val) {
         // Anime l'arête vers l'enfant droit (si l'enfant existe déjà)
         if (node.right) await highlightEdge(node.id, node.right.id, 'edge-search');
-        node.right = await insertAsync(node.right, val);
+        // On passe les coordonnées actuelles
+        node.right = await insertAsync(node.right, val, node.x, node.y);
         // Phase 3 remontée : change l'arête en cyan
         if (node.right) setEdgeColor(node.id, node.right.id, 'edge-rebalance');
     } else {
@@ -809,6 +895,7 @@ async function insertAsync(node, val) {
     updateDOMTree();
     highlight(node.id, 'rebalance-path');
     showBalanceRing(node.id);
+    focusOnNode(node); // Tracking
 
     // Pop les badges si la valeur a changé
     if (node.height !== oldHeight) popBadge(node.id, 'badge-height');
@@ -883,6 +970,7 @@ async function deleteAsync(node, val) {
     // ──────────────────────────────────────────────
     setStatus(`🔍 Recherche pour suppression… Comparaison avec ${node.val}`, 'search');
     highlight(node.id, 'search-path');
+    focusOnNode(node); // Tracking
     await sleep(animSpeed);
     unhighlight(node.id, 'search-path');
 
@@ -899,6 +987,7 @@ async function deleteAsync(node, val) {
         // PHASE 2 : Action — suppression du nœud trouvé
         // ──────────────────────────────────────────────
         setStatus(`✦ Nœud ${val} trouvé ! Suppression…`, 'delete');
+        focusOnNode(node); // Tracking
 
         // Animation de clignotement rouge
         if (!isInstant) {
@@ -936,6 +1025,7 @@ async function deleteAsync(node, val) {
     updateDOMTree();
     highlight(node.id, 'rebalance-path');
     showBalanceRing(node.id);
+    focusOnNode(node); // Tracking
 
     if (node.height !== oldHeight) popBadge(node.id, 'badge-height');
     if (newBf !== oldBf) popBadge(node.id, 'badge-bf');
@@ -1175,6 +1265,47 @@ async function uiBuildFromList() {
     setButtonsDisabled(false);
 }
 
+async function uiGenerateRandom() {
+    if (isAnimating) return;
+    const countInput = document.getElementById('randomCount');
+    const count = parseInt(countInput.value);
+
+    if (isNaN(count) || count <= 0) {
+        setStatus("Veuillez entrer un nombre valide de nœuds.", 'done');
+        return;
+    }
+
+    // Vide l'arbre existant
+    root = null;
+    nextNodeId = 1;
+    document.getElementById('nodes').innerHTML = '';
+    document.getElementById('edges').innerHTML = '';
+
+    isAnimating = true;
+    setButtonsDisabled(true);
+    countInput.value = '';
+
+    // Génère 'count' nombres aléatoires uniques (entre 1 et count*3 pour aérer un peu)
+    const values = new Set();
+    const range = Math.max(count * 3, 100);
+    while (values.size < count) {
+        values.add(Math.floor(Math.random() * range) + 1);
+    }
+
+    // Insertion instantanée pour ne pas attendre 3 plombes
+    isInstant = true;
+    for (let val of values) {
+        root = await insertAsync(root, val);
+    }
+    isInstant = false;
+
+    updateDOMTree();
+    autoFitView();
+    setStatus(`✓ Arbre aléatoire généré (${count} nœuds).`, 'done');
+    isAnimating = false;
+    setButtonsDisabled(false);
+}
+
 // Touche Entrée sur les inputs
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('valInput').addEventListener('keydown', e => {
@@ -1182,6 +1313,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('listInput').addEventListener('keydown', e => {
         if (e.key === 'Enter') uiBuildFromList();
+    });
+    document.getElementById('randomCount').addEventListener('keydown', e => {
+        if (e.key === 'Enter') uiGenerateRandom();
     });
 });
 
