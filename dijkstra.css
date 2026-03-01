@@ -1,0 +1,391 @@
+/* ============================================================
+   DIJKSTRA — Styles spécifiques
+   ============================================================ */
+
+/* --- Boutons Mode Édition --- */
+.cp-mode-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+}
+
+.mode-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 4px;
+    font-size: 11px;
+    background: #0f3460;
+    border: 1px solid #334;
+    border-radius: 6px;
+    color: #8899aa;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.mode-btn:hover { background: #1a4a7a; color: #fff; }
+.mode-btn.active {
+    background: #3498db;
+    border-color: #3498db;
+    color: #fff;
+    font-weight: 600;
+}
+.mode-icon {
+    font-size: 16px;
+    line-height: 1;
+}
+
+/* --- Nœuds Graphe : override du style.css pour Dijkstra --- */
+.node {
+    cursor: pointer;
+    /* Pas de transition left/top lente (c'est pour AVL FLIP, pas pour le drag) */
+    transition: opacity 0.2s ease, transform 0.2s ease !important;
+    /* Limite les artefacts de rendu GPU */
+    will-change: transform, opacity;
+}
+
+/* --- SVG edges : couvre tout l'espace (coordonnées négatives incluses) --- */
+svg#edges {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    overflow: visible !important;
+}
+
+/* --- Containers : overflow visible pour permettre les coordonnées négatives --- */
+#tree-container,
+#nodes,
+#weights {
+    overflow: visible !important;
+}
+
+#weights {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* Nœud sélectionné (pour créer une arête) */
+.node.selected .node-core {
+    border-color: #3498db !important;
+    box-shadow: 0 0 20px rgba(52, 152, 219, 0.8) !important;
+}
+
+/* Nœud de départ (vert) */
+.node.dijkstra-start .node-core {
+    border-color: #2ecc71 !important;
+    box-shadow: 0 0 25px rgba(46, 204, 113, 0.7) !important;
+    background: radial-gradient(circle at 35% 35%, #2a6a3a, #1a3e2a) !important;
+}
+
+/* Nœud d'arrivée (violet) */
+.node.dijkstra-end .node-core {
+    border-color: #9b59b6 !important;
+    box-shadow: 0 0 25px rgba(155, 89, 182, 0.7) !important;
+    background: radial-gradient(circle at 35% 35%, #4a2a6a, #2e1a3e) !important;
+}
+
+/* Nœud en cours de traitement (orange) */
+.node.dijkstra-current .node-core {
+    border-color: #f39c12 !important;
+    box-shadow: 0 0 30px rgba(243, 156, 18, 0.7) !important;
+    background: radial-gradient(circle at 35% 35%, #6a5a2a, #3a3018) !important;
+    animation: pulseOrange 0.8s ease-in-out infinite alternate;
+}
+@keyframes pulseOrange {
+    from { box-shadow: 0 0 20px rgba(243, 156, 18, 0.5); }
+    to   { box-shadow: 0 0 40px rgba(243, 156, 18, 0.9); }
+}
+
+/* Nœud voisin examiné (jaune pâle) */
+.node.dijkstra-neighbor .node-core {
+    border-color: #f1c40f !important;
+    box-shadow: 0 0 20px rgba(241, 196, 15, 0.6) !important;
+}
+
+/* Nœud visité / terminé (cyan) */
+.node.dijkstra-visited .node-core {
+    border-color: #00ccff !important;
+    box-shadow: 0 0 15px rgba(0, 204, 255, 0.4) !important;
+    background: radial-gradient(circle at 35% 35%, #2a4a6a, #1a2a3e) !important;
+}
+
+/* Nœud sur le chemin final (vert vif pulsant) */
+.node.dijkstra-path .node-core {
+    border-color: #2ecc71 !important;
+    box-shadow: 0 0 30px rgba(46, 204, 113, 0.8) !important;
+    background: radial-gradient(circle at 35% 35%, #2a6a3a, #1a3e2a) !important;
+    animation: pulsePath 1s ease-in-out infinite alternate;
+}
+@keyframes pulsePath {
+    from { box-shadow: 0 0 20px rgba(46, 204, 113, 0.6); }
+    to   { box-shadow: 0 0 40px rgba(46, 204, 113, 1); }
+}
+
+/* --- Badge distance au dessus du nœud --- */
+.dist-badge {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 6px;
+    background: #2a2a3e;
+    border: 1px solid #556;
+    color: #aaa;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    z-index: 5;
+    pointer-events: none;
+    transition: background 0.3s, color 0.3s, transform 0.3s, border-color 0.3s;
+}
+.dist-badge.updated {
+    background: #e67e22;
+    color: #fff;
+    border-color: #e67e22;
+    transform: translateX(-50%) scale(1.3);
+}
+.dist-badge.final {
+    background: #2ecc71;
+    color: #000;
+    border-color: #2ecc71;
+}
+
+/* --- Poids des arêtes --- */
+.edge-weight {
+    position: absolute;
+    background: rgba(22, 33, 62, 0.9);
+    border: 1px solid #445;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #ccc;
+    pointer-events: none;
+    user-select: none;
+    z-index: 2;
+    transform: translate(-50%, -50%);
+}
+
+/* Arête sur le chemin final */
+.edge-weight.on-path {
+    background: rgba(46, 204, 113, 0.3);
+    border-color: #2ecc71;
+    color: #2ecc71;
+}
+
+/* --- Tableau des distances flottant --- */
+#dist-table {
+    position: fixed;
+    top: 60px;
+    right: 14px;
+    width: 260px;
+    z-index: 150;
+    background: rgba(16, 21, 38, 0.97);
+    border: 1px solid #2a3050;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    backdrop-filter: blur(12px);
+    overflow: hidden;
+    max-height: calc(100vh - 130px);
+    display: flex;
+    flex-direction: column;
+}
+
+#dist-table-header {
+    padding: 10px 14px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #ccdde8;
+    background: rgba(52, 152, 219, 0.1);
+    border-bottom: 1px solid #2a3050;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+#dist-detail-toggle {
+    width: 30px; height: 30px;
+    padding: 0;
+    font-size: 16px;
+    background: rgba(52, 152, 219, 0.15);
+    border: 1px solid #334;
+    border-radius: 6px;
+    color: #8899aa;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+}
+#dist-detail-toggle:hover { background: rgba(52, 152, 219, 0.3); color: #fff; }
+#dist-detail-toggle.active { background: #3498db; color: #fff; }
+
+#dist-table-body {
+    padding: 6px 0;
+    max-height: 300px;
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.dist-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 14px;
+    font-size: 14px;
+    color: #8899aa;
+    transition: background 0.3s, color 0.3s;
+}
+.dist-row .dist-node-label {
+    font-weight: 700;
+    width: 28px;
+    font-size: 15px;
+}
+.dist-row .dist-value {
+    font-family: 'Courier New', monospace;
+    font-size: 15px;
+    font-weight: 600;
+    min-width: 44px;
+    text-align: right;
+}
+.dist-row .dist-via {
+    font-size: 12px;
+    color: #556;
+    min-width: 55px;
+    text-align: center;
+}
+
+.dist-row.active {
+    background: rgba(243, 156, 18, 0.15);
+    color: #f39c12;
+}
+.dist-row.updated {
+    background: rgba(230, 126, 34, 0.2);
+    color: #e67e22;
+}
+.dist-row.visited {
+    background: rgba(0, 204, 255, 0.08);
+    color: #00ccff;
+}
+.dist-row.on-path {
+    background: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+}
+
+/* --- Tableau détaillé d'itérations --- */
+#dist-detail {
+    border-top: 1px solid #2a3050;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+#dist-detail-header {
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #667;
+    background: rgba(52, 152, 219, 0.05);
+    border-bottom: 1px solid #2a3050;
+    flex-shrink: 0;
+}
+
+#dist-detail-scroll {
+    overflow: auto;
+    max-height: 260px;
+}
+
+#dist-detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+#dist-detail-table th {
+    position: sticky;
+    top: 0;
+    background: #16213e;
+    color: #aabbcc;
+    font-weight: 700;
+    padding: 6px 6px;
+    text-align: center;
+    border-bottom: 2px solid #2a3050;
+    font-size: 13px;
+    z-index: 1;
+}
+
+#dist-detail-table td {
+    padding: 5px 6px;
+    text-align: center;
+    color: #8899aa;
+    border-bottom: 1px solid rgba(42, 48, 80, 0.4);
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* Première colonne (label itération) */
+#dist-detail-table td:first-child {
+    font-family: inherit;
+    font-weight: 600;
+    color: #667;
+    font-size: 11px;
+    text-align: left;
+    padding-left: 8px;
+}
+
+/* Cellule mise à jour */
+#dist-detail-table td.cell-updated {
+    color: #e67e22;
+    font-weight: 700;
+}
+
+/* Cellule nœud visité */
+#dist-detail-table td.cell-visited {
+    color: #00ccff;
+}
+
+/* Cellule sur le chemin final */
+#dist-detail-table td.cell-path {
+    color: #2ecc71;
+    font-weight: 700;
+}
+
+/* Ligne active */
+#dist-detail-table tr.row-active {
+    background: rgba(243, 156, 18, 0.08);
+}
+#dist-detail-table tr:last-child {
+    background: rgba(0, 204, 255, 0.05);
+}
+
+/* --- Arêtes SVG spécifiques Dijkstra --- */
+svg#edges line.edge-path-final {
+    stroke: #2ecc71;
+    stroke-width: 5px;
+    filter: drop-shadow(0 0 6px rgba(46, 204, 113, 0.6));
+}
+svg#edges line.edge-examining {
+    stroke: #f39c12;
+    stroke-width: 4px;
+    filter: drop-shadow(0 0 4px rgba(243, 156, 18, 0.5));
+}
+svg#edges line.edge-relaxed {
+    stroke: #e67e22;
+    stroke-width: 4px;
+    filter: drop-shadow(0 0 4px rgba(230, 126, 34, 0.5));
+}
+
+
+
+
+

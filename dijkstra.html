@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualisation — Dijkstra</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="dijkstra.css">
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav id="navbar">
+    <a href="index.html" class="nav-logo">Visualisation de graphes</a>
+    <div class="nav-links">
+        <a href="index.html" class="nav-link">Arbre AVL</a>
+        <a href="dijkstra.html" class="nav-link active">Dijkstra</a>
+        <a href="#" class="nav-link disabled" title="Bientôt disponible">BFS / DFS</a>
+        <a href="#" class="nav-link disabled" title="Bientôt disponible">Tas binaire</a>
+    </div>
+</nav>
+
+<!-- ===== PANNEAU DE CONTRÔLE ===== -->
+<div id="control-panel">
+    <div id="control-panel-header">
+        <span>🔧 Contrôles Graphe</span>
+        <button id="control-panel-toggle" onclick="toggleControlPanel()" title="Réduire">−</button>
+    </div>
+    <div id="control-panel-body">
+
+        <!-- Mode Édition -->
+        <div class="cp-section">
+            <label class="cp-label">Mode</label>
+            <div class="cp-mode-row">
+                <button id="btnModeAdd" class="mode-btn active" onclick="setMode('add')">
+                    <span class="mode-icon">＋</span>Nœud
+                </button>
+                <button id="btnModeEdge" class="mode-btn" onclick="setMode('edge')">
+                    <span class="mode-icon">↗</span>Arête
+                </button>
+                <button id="btnModeMove" class="mode-btn" onclick="setMode('move')">
+                    <span class="mode-icon">✥</span>Déplacer
+                </button>
+                <button id="btnModeDelete" class="mode-btn" onclick="setMode('delete')">
+                    <span class="mode-icon">✕</span>Suppr.
+                </button>
+            </div>
+        </div>
+
+        <!-- Dijkstra -->
+        <div class="cp-section">
+            <label class="cp-label">Dijkstra</label>
+            <div class="cp-row" style="gap:6px;">
+                <input type="text" id="startNodeInput" placeholder="Départ (A)" style="flex:1;min-width:0;" />
+                <span style="color:#556;font-size:18px;line-height:36px;">→</span>
+                <input type="text" id="endNodeInput" placeholder="Arrivée (D)" style="flex:1;min-width:0;" />
+            </div>
+            <button id="btnRun" class="btn-success cp-full-btn" onclick="uiRunDijkstra()">▶ Lancer Dijkstra</button>
+            <button id="btnReset" class="cp-full-btn" onclick="uiResetVisuals()" style="background:#556;">↺ Réinitialiser</button>
+        </div>
+
+        <!-- Vitesse -->
+        <div class="cp-section">
+            <label class="cp-label">Vitesse</label>
+            <div class="cp-speed-row">
+                <button class="speed-btn" onclick="setSpeed(0.25)">×0.25</button>
+                <button class="speed-btn" onclick="setSpeed(0.5)">×0.5</button>
+                <button class="speed-btn active" onclick="setSpeed(1)">×1</button>
+                <button class="speed-btn" onclick="setSpeed(2)">×2</button>
+                <button class="speed-btn" onclick="setSpeed(5)">×5</button>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="cp-section">
+            <label class="cp-label">Générer aléatoirement</label>
+            <div class="cp-row">
+                <input type="number" id="randomNodeCount" placeholder="Nb nœuds (ex: 8)" min="2" max="26" style="flex:1;min-width:0;" />
+                <button id="btnRandom" class="btn-success" onclick="uiGenerateRandomGraph()" title="Générer" style="width:38px;height:36px;font-size:16px;">🎲</button>
+            </div>
+        </div>
+
+        <div class="cp-section">
+            <button id="btnClear" class="btn-warning cp-full-btn" onclick="uiClearGraph()">🗑 Tout effacer</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== BANNIÈRE DE STATUT ===== -->
+<div id="status-banner">
+    <div id="status-icon"></div>
+    <div id="status-text">Mode Édition : Cliquez pour ajouter des nœuds.</div>
+</div>
+
+<!-- ===== TABLEAU DES DISTANCES (affiché pendant Dijkstra) ===== -->
+<div id="dist-table" style="display:none;">
+    <div id="dist-table-header">
+        <span>📊 Distances</span>
+        <button id="dist-detail-toggle" onclick="toggleDetailTable()" title="Voir le détail des itérations">👁</button>
+    </div>
+    <div id="dist-table-body"></div>
+    <!-- Tableau détaillé (itérations) -->
+    <div id="dist-detail" style="display:none;">
+        <div id="dist-detail-header">Itérations</div>
+        <div id="dist-detail-scroll">
+            <table id="dist-detail-table">
+                <thead id="dist-detail-thead"></thead>
+                <tbody id="dist-detail-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ===== VIEWPORT ===== -->
+<div id="tree-viewport">
+    <div id="tree-world">
+        <div id="tree-container">
+            <svg id="edges"></svg>
+            <div id="nodes"></div>
+            <div id="weights"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== CONTRÔLES ZOOM ===== -->
+<div id="zoom-controls">
+    <button onclick="zoomIn()" title="Zoom +">+</button>
+    <div id="zoom-level">100%</div>
+    <button onclick="zoomOut()" title="Zoom −">−</button>
+    <button onclick="zoomReset()" title="Recentrer" style="font-size:28px;">⌂</button>
+</div>
+
+<!-- ===== FOOTER ===== -->
+<div id="footer">
+    <span style="opacity: 0.7;">© 2026 Visualisation de graphes —</span>
+    <span class="separator">|</span>
+    <span>Créé par : </span>
+    <a href="https://github.com/TLeoDev" target="_blank">Léo TUAILLON</a>,
+    <a href="https://github.com/leocdt" target="_blank">Léo Condat</a>,
+    <a href="https://github.com/jimmy-legg" target="_blank">Jimmy Legg</a>
+    <span class="separator">|</span>
+    <a href="LICENSE" target="_blank">Licence MIT</a>
+</div>
+
+<script src="dijkstra.js"></script>
+</body>
+</html>
+
+
+
